@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:weight_tracker/stores/app_store.dart';
+import 'package:weight_tracker/stores/days_list_store.dart';
 import 'package:weight_tracker/ui/home_page.dart';
 
 void main() {
@@ -12,8 +14,13 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [],
-      child: const HomePageScreen(),
+      providers: [
+        Provider(create: (context) => AppStore()),
+        Provider(create: (context) => DaysListStore()),
+      ],
+      child: const MaterialApp(
+        home: HomePageScreen(),
+      ),
     );
   }
 }
