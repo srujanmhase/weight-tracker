@@ -15,6 +15,10 @@ dependencies:
   provider:
   google_fonts:
   lottie:
+  intl:
+  get_it:
+  flutter_local_notifications:
+  timezone:
   flutter:
     sdk: flutter
 
