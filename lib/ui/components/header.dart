@@ -1,15 +1,19 @@
 import 'package:chart_sparkline/chart_sparkline.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import 'package:weight_tracker/constants/assets.dart';
 import 'package:weight_tracker/constants/colors.dart';
 import 'package:weight_tracker/constants/font_styles.dart';
+import 'package:weight_tracker/stores/app_store.dart';
 
 class HomePageHeader extends StatelessWidget {
   const HomePageHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final store = context.read<AppStore>();
     return Column(
       children: [
         Container(
@@ -24,49 +28,53 @@ class HomePageHeader extends StatelessWidget {
               const SizedBox(height: 64),
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(
-                  'hi Srujan',
-                  style: context.title.copyWith(
-                    color: Colors.white,
+                child: Observer(
+                  builder: (context) => Text(
+                    'hi ${store.name.value}',
+                    style: context.title.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: RichText(
-                  text: TextSpan(
-                    style: context.paragraph.copyWith(height: 1.8),
-                    children: [
-                      const TextSpan(text: 'you\'ve lost'),
-                      WidgetSpan(
-                        child: Transform.translate(
-                          offset: const Offset(0, 5),
-                          child: LottieBuilder.asset(
-                            Assets.arrow,
-                            height: 40,
-                          ),
-                        ),
-                      ),
-                      const TextSpan(
-                          text:
-                              '30gm over the last 10 days with an average weight of 62.1Kg. You haven\'t reached your goal of 65Kg'),
-                      WidgetSpan(
-                        child: GestureDetector(
-                          onTap: () => print('ok'),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Icon(
-                              Icons.edit,
-                              size: 18,
-                              color: Colors.white,
+                child: Observer(
+                  builder: (context) => RichText(
+                    text: TextSpan(
+                      style: context.paragraph.copyWith(height: 1.8),
+                      children: [
+                        const TextSpan(text: 'you\'ve lost'),
+                        WidgetSpan(
+                          child: Transform.translate(
+                            offset: const Offset(0, 5),
+                            child: LottieBuilder.asset(
+                              Assets.arrow,
+                              height: 40,
                             ),
                           ),
                         ),
-                      ),
-                      const TextSpan(
-                        text: 'You haven\'t recorded your weight today.',
-                      ),
-                    ],
+                        TextSpan(
+                            text:
+                                '30gm over the last 10 days with an average weight of 62.1Kg. You haven\'t reached your goal of ${store.goal.value}Kg'),
+                        WidgetSpan(
+                          child: GestureDetector(
+                            onTap: () => store.setPreferencesPage(),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              child: Icon(
+                                Icons.edit,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const TextSpan(
+                          text: 'You haven\'t recorded your weight today.',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -93,7 +101,7 @@ class HomePageHeader extends StatelessWidget {
 }
 
 class _AnimatedChart extends StatefulWidget {
-  const _AnimatedChart({super.key});
+  const _AnimatedChart();
 
   @override
   State<_AnimatedChart> createState() => __AnimatedChartState();

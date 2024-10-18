@@ -23,6 +23,7 @@ class _HomePageScreenState extends State<HomePageScreen>
   void initState() {
     super.initState();
     _store.delegate = this;
+    _store.init();
   }
 
   @override

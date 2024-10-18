@@ -4,9 +4,9 @@ part 'weight.g.dart';
 
 @Collection()
 class Weight {
-  Id? id;
+  Id? id = Isar.autoIncrement;
 
   double? weight;
 
-  DateTime? day;
+  String? day;
 }

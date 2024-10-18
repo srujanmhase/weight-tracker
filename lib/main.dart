@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:weight_tracker/repositories/di.dart';
 import 'package:weight_tracker/stores/app_store.dart';
 import 'package:weight_tracker/stores/days_list_store.dart';
 import 'package:weight_tracker/ui/home_page.dart';
 
 void main() {
+  setup();
   runApp(const App());
 }
 

@@ -20,7 +20,7 @@ const WeightSchema = CollectionSchema(
     r'day': PropertySchema(
       id: 0,
       name: r'day',
-      type: IsarType.dateTime,
+      type: IsarType.string,
     ),
     r'weight': PropertySchema(
       id: 1,
@@ -48,6 +48,12 @@ int _weightEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.day;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -57,7 +63,7 @@ void _weightSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.day);
+  writer.writeString(offsets[0], object.day);
   writer.writeDouble(offsets[1], object.weight);
 }
 
@@ -68,7 +74,7 @@ Weight _weightDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Weight();
-  object.day = reader.readDateTimeOrNull(offsets[0]);
+  object.day = reader.readStringOrNull(offsets[0]);
   object.id = id;
   object.weight = reader.readDoubleOrNull(offsets[1]);
   return object;
@@ -82,7 +88,7 @@ P _weightDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
       return (reader.readDoubleOrNull(offset)) as P;
     default:
@@ -195,46 +201,54 @@ extension WeightQueryFilter on QueryBuilder<Weight, Weight, QFilterCondition> {
   }
 
   QueryBuilder<Weight, Weight, QAfterFilterCondition> dayEqualTo(
-      DateTime? value) {
+    String? value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'day',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<Weight, Weight, QAfterFilterCondition> dayGreaterThan(
-    DateTime? value, {
+    String? value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'day',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<Weight, Weight, QAfterFilterCondition> dayLessThan(
-    DateTime? value, {
+    String? value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'day',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<Weight, Weight, QAfterFilterCondition> dayBetween(
-    DateTime? lower,
-    DateTime? upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -243,6 +257,73 @@ extension WeightQueryFilter on QueryBuilder<Weight, Weight, QFilterCondition> {
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Weight, Weight, QAfterFilterCondition> dayStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'day',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Weight, Weight, QAfterFilterCondition> dayEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'day',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Weight, Weight, QAfterFilterCondition> dayContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'day',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Weight, Weight, QAfterFilterCondition> dayMatches(String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'day',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Weight, Weight, QAfterFilterCondition> dayIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'day',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Weight, Weight, QAfterFilterCondition> dayIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'day',
+        value: '',
       ));
     });
   }
@@ -463,9 +544,10 @@ extension WeightQuerySortThenBy on QueryBuilder<Weight, Weight, QSortThenBy> {
 }
 
 extension WeightQueryWhereDistinct on QueryBuilder<Weight, Weight, QDistinct> {
-  QueryBuilder<Weight, Weight, QDistinct> distinctByDay() {
+  QueryBuilder<Weight, Weight, QDistinct> distinctByDay(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'day');
+      return query.addDistinctBy(r'day', caseSensitive: caseSensitive);
     });
   }
 
@@ -483,7 +565,7 @@ extension WeightQueryProperty on QueryBuilder<Weight, Weight, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Weight, DateTime?, QQueryOperations> dayProperty() {
+  QueryBuilder<Weight, String?, QQueryOperations> dayProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'day');
     });
