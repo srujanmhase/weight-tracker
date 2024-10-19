@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:mobx/mobx.dart';
 import 'package:weight_tracker/repositories/db.dart';
 import 'package:weight_tracker/repositories/di.dart';
+import 'package:weight_tracker/repositories/extensions.dart';
 
 class PreferencesStore {
   DatabaseService get db => getIt<DatabaseService>();
@@ -13,11 +14,25 @@ class PreferencesStore {
   void init() async {
     final pref = await db.preferences();
 
+    final weightsExist = await db.areWeightsInitialized();
+
     setName(pref?.name);
     setGoal(pref?.goal.toString());
 
     onNameUpdate?.call(pref?.name);
     onGoalsUpdate?.call((pref?.goal ?? '').toString());
+
+    if (pref?.time == null) {
+      await db.setTime(DateTime.now());
+    }
+
+    if (!weightsExist) {
+      final today = DateTime.now().woTime();
+
+      for (int i = 0; i <= 90; i++) {
+        await db.addOrUpdateWeight(-1, today.subtract(Duration(days: i)));
+      }
+    }
   }
 
   final Observable<String?> name = Observable('');

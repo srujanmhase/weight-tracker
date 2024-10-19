@@ -8,5 +8,5 @@ class Weight {
 
   double? weight;
 
-  String? day;
+  DateTime? day;
 }

@@ -1,22 +1,42 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
 import 'package:weight_tracker/models/preferences.dart';
+import 'package:weight_tracker/models/weight.dart';
 import 'package:weight_tracker/repositories/db.dart';
 import 'package:weight_tracker/repositories/di.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:weight_tracker/repositories/extensions.dart';
 
 class AppStore {
   AppDelegate? delegate;
   DatabaseService get db => getIt<DatabaseService>();
+  FlutterLocalNotificationsPlugin get notifications =>
+      getIt<FlutterLocalNotificationsPlugin>();
 
   Future<void> init() async {
     tz.initializeTimeZones();
-    //tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     final pref = await db.preferences();
 
     if (pref == null) setPreferencesPage();
+
+    const initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initializationSettingsIOS = DarwinInitializationSettings();
+    const initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
+
+    notifications.initialize(initializationSettings);
+
+    notifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
 
     _updatePrefs(pref);
 
@@ -24,12 +44,28 @@ class AppStore {
       final pref = await db.preferences();
       _updatePrefs(pref);
     });
+
+    db.weightsStream?.listen((_) async {
+      final weights = await db.weights();
+
+      runInAction(() {
+        _weights.clear();
+        _weights.addAll(weights);
+      });
+    });
+
+    final today = await db.weightOnDay(DateTime.now().woTime());
+
+    if (today == null) {
+      await db.addOrUpdateWeight(-1, DateTime.now().woTime());
+    }
   }
 
   void _updatePrefs(Preferences? pref) {
     runInAction(() {
       _name.value = pref?.name ?? '';
       _goal.value = (pref?.goal ?? '').toString();
+      _time.value = (DateFormat.jm().format(pref?.time ?? DateTime(0)));
     });
   }
 
@@ -37,18 +73,33 @@ class AppStore {
 
   final Observable<String> _name = Observable('');
   final Observable<String> _goal = Observable('');
+  final Observable<String> _time = Observable('');
 
   late final Computed<String> name = Computed(() => _name.value);
   late final Computed<String> goal = Computed(() => _goal.value);
+  late final Computed<String> time = Computed(() => _time.value);
 
-  void setNotifications() async {
+  final ObservableList<Weight> _weights = ObservableList.of([]);
+  late final Computed<List<Weight>> weights = Computed(() => _weights);
+
+  void setNotifications(TimeOfDay time) async {
+    DateTime now = DateTime.now();
+
+    DateTime dateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+
     final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
     await flutterLocalNotificationsPlugin.cancelAll();
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
+      1,
       'Record your weight today!',
       'Make sure you stick to the schedule & record your weight today.',
-      tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+      tz.TZDateTime.from(dateTime, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'weight_recorder_srj',
@@ -61,6 +112,8 @@ class AppStore {
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
+
+    await db.setTime(dateTime);
   }
 }
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobx/mobx.dart';
 import 'package:provider/provider.dart';
 import 'package:weight_tracker/constants/colors.dart';
 import 'package:weight_tracker/constants/font_styles.dart';
+import 'package:weight_tracker/repositories/extensions.dart';
 import 'package:weight_tracker/stores/days_list_store.dart';
 
 class DaysListDisplay extends StatefulWidget {
@@ -21,6 +23,8 @@ class _DaysListDisplayState extends State<DaysListDisplay>
 
   late final ReactionDisposer _rxn;
 
+  late final ReactionDisposer _controllerRxn;
+
   @override
   void initState() {
     super.initState();
@@ -28,13 +32,7 @@ class _DaysListDisplayState extends State<DaysListDisplay>
       viewportFraction: 0.12,
     );
 
-    _animationControllers = List.generate(
-      _store.days.length,
-      (i) => AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 500),
-      ),
-    );
+    _animationControllers = [];
 
     _controller.addListener(() {
       _store.setCurrentPage(_controller.page ?? 0);
@@ -51,6 +49,18 @@ class _DaysListDisplayState extends State<DaysListDisplay>
       },
       fireImmediately: true,
     );
+
+    _controllerRxn = reaction((_) => _store.days.value.length, (d) {
+      _animationControllers.clear();
+
+      _animationControllers.addAll(List.generate(
+        _store.days.value.length,
+        (i) => AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 500),
+        ),
+      ));
+    });
   }
 
   @override
@@ -58,40 +68,50 @@ class _DaysListDisplayState extends State<DaysListDisplay>
     _controller.dispose();
     _animationControllers.map((e) => e.dispose());
     _rxn();
+    _controllerRxn();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 90,
-      child: PageView.builder(
-        controller: _controller,
-        itemCount: 90,
-        clipBehavior: Clip.none,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () => _controller.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.linear,
+    return Observer(
+      builder: (context) => SizedBox(
+        height: 90,
+        child: switch (_store.days.value.length) {
+          _ when _store.days.value.isNotEmpty => PageView.builder(
+              controller: _controller,
+              itemCount: _store.days.value.length,
+              clipBehavior: Clip.none,
+              itemBuilder: (context, index) {
+                final day = _store.days.value[index].day?.day ?? 0;
+                final month = _store.days.value[index].day?.month ?? 0;
+                final added = (_store.days.value[index].weight ?? -1) > -1;
+                return GestureDetector(
+                  onTap: () => _controller.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.linear,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      day == 1
+                          ? Text(
+                              month.monthOfYear,
+                              style: context.h2,
+                            )
+                          : const SizedBox(height: 30),
+                      _AnimatedDayWidget(
+                        controller: _animationControllers[index],
+                        day: day,
+                        added: added,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                index % 10 == 0
-                    ? Text(
-                        'oct',
-                        style: context.h2,
-                      )
-                    : const SizedBox(height: 30),
-                _AnimatedDayWidget(
-                  controller: _animationControllers[index],
-                  index: index,
-                ),
-              ],
-            ),
-          );
+          _ => const SizedBox(),
         },
       ),
     );
@@ -99,10 +119,15 @@ class _DaysListDisplayState extends State<DaysListDisplay>
 }
 
 class _AnimatedDayWidget extends StatefulWidget {
-  const _AnimatedDayWidget({required this.controller, required this.index});
+  const _AnimatedDayWidget({
+    required this.controller,
+    required this.day,
+    required this.added,
+  });
 
   final AnimationController controller;
-  final int index;
+  final int day;
+  final bool added;
 
   @override
   State<_AnimatedDayWidget> createState() => __AnimatedDayWidgetState();
@@ -131,13 +156,13 @@ class __AnimatedDayWidgetState extends State<_AnimatedDayWidget> {
         margin: const EdgeInsets.all(8),
         height: 30,
         width: 30,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: themeGreen,
+          color: widget.added ? themeGreen : Colors.red,
         ),
         child: Center(
           child: Text(
-            widget.index.toString(),
+            widget.day.toString(),
             style: context.xtraLight.copyWith(
               color: Colors.white,
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:provider/provider.dart';
 import 'package:weight_tracker/constants/font_styles.dart';
 import 'package:weight_tracker/stores/app_store.dart';
@@ -19,14 +20,24 @@ class TimeSettingsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'I\'ll remind you everyday @ 4PM to record your weight.',
-            style: context.paragraph.copyWith(
-              color: foregroundColor,
+          Observer(
+            builder: (context) => Text(
+              'I\'ll remind you everyday @ ${store.time.value} to record your weight.',
+              style: context.paragraph.copyWith(
+                color: foregroundColor,
+              ),
             ),
           ),
           GestureDetector(
-            onTap: store.setPreferencesPage,
+            onTap: () async {
+              final TimeOfDay? picked = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.now(),
+              );
+              if (picked != null) {
+                store.setNotifications(picked);
+              }
+            },
             child: Text(
               'Not quite right?',
               style: context.paragraph.copyWith(

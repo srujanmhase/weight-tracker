@@ -1,8 +1,8 @@
-import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:weight_tracker/models/preferences.dart';
 import 'package:weight_tracker/models/weight.dart';
+import 'package:weight_tracker/repositories/extensions.dart';
 
 class DatabaseService {
   DatabaseService() {
@@ -27,31 +27,43 @@ class DatabaseService {
     return prefs;
   }
 
+  Future<bool> areWeightsInitialized() async {
+    if (isar == null) await _init();
+
+    final weights = await isar?.weights.count() ?? 0;
+
+    return weights > 5;
+  }
+
+  Future<List<Weight>> weights() async {
+    final result = await isar?.weights.where().findAll();
+
+    return result ?? [];
+  }
+
   late final Stream<void>? preferenceStream = isar?.preferences.watchLazy();
 
-  // userChanged.listen(() {
-  //   print('A User changed');
-  // });
-
-  late final Stream<void>? weightsStream = isar?.weights.watchLazy();
+  late final Stream<void>? weightsStream = isar?.weights.watchLazy(
+    fireImmediately: true,
+  );
 
   Future<void> addOrUpdateWeight(double weight, DateTime day) async {
     if (isar == null) await _init();
 
-    final DateFormat formatter = DateFormat('yyyy-MM-dd');
-    final String formatted = formatter.format(day);
-
-    final existingWeight = await isar?.weights
-            .filter()
-            .dayEqualTo(formatted)
-            .findFirst() ??
-        Weight()
-      ..day = formatted;
+    final existingWeight = await weightOnDay(day) ?? Weight()
+      ..day = day.woTime();
 
     existingWeight.weight = weight;
     await isar?.writeTxn(() async {
       isar?.weights.put(existingWeight);
     });
+  }
+
+  Future<Weight?> weightOnDay(DateTime day) async {
+    final result =
+        await isar?.weights.filter().dayEqualTo(day.woTime()).findFirst();
+
+    return result;
   }
 
   Future<void> setName(String newName) async {

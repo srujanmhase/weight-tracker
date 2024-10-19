@@ -18,7 +18,10 @@ class App extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider(create: (context) => AppStore()),
-        Provider(create: (context) => DaysListStore()),
+        ProxyProvider<AppStore, DaysListStore>(
+          create: (context) => DaysListStore(context.read<AppStore>()),
+          update: (context, value, previous) => DaysListStore(value),
+        ),
       ],
       child: const MaterialApp(
         home: HomePageScreen(),
