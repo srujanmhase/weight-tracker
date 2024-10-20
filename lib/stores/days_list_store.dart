@@ -7,8 +7,15 @@ class DaysListStore {
 
   final AppStore appStore;
 
-  final Observable<double> currentPage = Observable(0);
-  final Observable<double> previousPage = Observable(0);
+  final Observable<double> _currentPage = Observable(-1);
+  final Observable<double> _previousPage = Observable(-1);
+
+  late final Computed<double> currentPage = Computed(
+    () => _currentPage.value,
+  );
+  late final Computed<double> previousPage = Computed(
+    () => _previousPage.value,
+  );
 
   late final Computed<List<Weight>> days = Computed(
     () => appStore.weights.value,
@@ -16,8 +23,8 @@ class DaysListStore {
 
   void setCurrentPage(double page) {
     runInAction(() {
-      previousPage.value = currentPage.value;
-      currentPage.value = page;
+      _previousPage.value = currentPage.value;
+      _currentPage.value = page;
     });
   }
 }

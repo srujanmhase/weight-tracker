@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobx/mobx.dart';
 import 'package:provider/provider.dart';
@@ -60,6 +61,15 @@ class _DaysListDisplayState extends State<DaysListDisplay>
           duration: const Duration(milliseconds: 500),
         ),
       ));
+
+      _store.setCurrentPage(0);
+    });
+
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(seconds: 1), () {
+        final current = _store.currentPage.value.toInt();
+        _animationControllers[current].forward();
+      });
     });
   }
 
