@@ -27,10 +27,14 @@ class PreferencesStore {
     }
 
     if (!weightsExist) {
-      final today = DateTime.now().woTime();
+      final initial = DateTime.now()
+          .subtract(
+            const Duration(days: 90),
+          )
+          .woTime();
 
       for (int i = 0; i <= 90; i++) {
-        await db.addOrUpdateWeight(-1, today.subtract(Duration(days: i)));
+        await db.addOrUpdateWeight(-1, initial.add(Duration(days: i)));
       }
     }
   }

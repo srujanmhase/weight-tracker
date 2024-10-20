@@ -38,7 +38,7 @@ class DatabaseService {
   Future<List<Weight>> weights() async {
     final result = await isar?.weights.where().findAll();
 
-    return result ?? [];
+    return (result ?? []).reversed.toList();
   }
 
   late final Stream<void>? preferenceStream = isar?.preferences.watchLazy();

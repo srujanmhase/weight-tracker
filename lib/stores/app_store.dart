@@ -21,7 +21,7 @@ class AppStore {
 
     final pref = await db.preferences();
 
-    if (pref == null) setPreferencesPage();
+    if (pref?.name == null || pref?.goal == null) setPreferencesPage();
 
     const initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -55,8 +55,9 @@ class AppStore {
     });
 
     final today = await db.weightOnDay(DateTime.now().woTime());
+    final weightsExist = await db.areWeightsInitialized();
 
-    if (today == null) {
+    if (weightsExist && today == null) {
       await db.addOrUpdateWeight(-1, DateTime.now().woTime());
     }
   }
@@ -64,7 +65,7 @@ class AppStore {
   void _updatePrefs(Preferences? pref) {
     runInAction(() {
       _name.value = pref?.name ?? '';
-      _goal.value = (pref?.goal ?? '').toString();
+      _goal.value = pref?.goal ?? -1;
       _time.value = (DateFormat.jm().format(pref?.time ?? DateTime(0)));
     });
   }
@@ -72,11 +73,11 @@ class AppStore {
   void setPreferencesPage() => delegate?.navigateToPreferences();
 
   final Observable<String> _name = Observable('');
-  final Observable<String> _goal = Observable('');
+  final Observable<double> _goal = Observable(-1);
   final Observable<String> _time = Observable('');
 
   late final Computed<String> name = Computed(() => _name.value);
-  late final Computed<String> goal = Computed(() => _goal.value);
+  late final Computed<double> goal = Computed(() => _goal.value);
   late final Computed<String> time = Computed(() => _time.value);
 
   final ObservableList<Weight> _weights = ObservableList.of([]);
