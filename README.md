@@ -1,16 +1,7 @@
 # weight_tracker
+RC: v0.1 (21-10-2024)
 
-A new Flutter project.
+Weight Tracker
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Introduction
+This app allows you to - set your weight goals and helps you to track your progress  over time using a simple easy to use interface. Visualize your progress & get notified everyday to record it.
