@@ -2,6 +2,7 @@ import 'package:chart_sparkline/chart_sparkline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:lottie/lottie.dart';
+import 'package:mobx/mobx.dart';
 import 'package:provider/provider.dart';
 import 'package:weight_tracker/constants/assets.dart';
 import 'package:weight_tracker/constants/colors.dart';
@@ -124,6 +125,8 @@ class __AnimatedChartState extends State<_AnimatedChart>
   DetailsStore get _store => context.read<DetailsStore>();
   late final AnimationController _controller;
 
+  ReactionDisposer? _rxn;
+
   @override
   void initState() {
     super.initState();
@@ -132,11 +135,18 @@ class __AnimatedChartState extends State<_AnimatedChart>
       duration: const Duration(seconds: 1),
     );
     _controller.forward();
+
+    _rxn = reaction((_) => _store.avlWeights.value, (d) {
+      setState(() {});
+
+      _controller.forward();
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _rxn?.call();
     super.dispose();
   }
 

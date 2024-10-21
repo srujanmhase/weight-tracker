@@ -40,8 +40,9 @@ class DetailsStore implements Disposable {
 
   late final Computed<DateTime> _activeDay = Computed(
     () {
-      if (_currentPage.value == -1 || appStore.weights.value.isEmpty)
+      if (_currentPage.value == -1 || appStore.weights.value.isEmpty) {
         return DateTime.now().woTime();
+      }
       return appStore.weights.value[_currentPage.value].day ??
           DateTime.now().woTime();
     },
