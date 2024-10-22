@@ -36,8 +36,7 @@ class AppStore {
     notifications
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
-
+        ?.requestExactAlarmsPermission();
     _updatePrefs(pref);
 
     db.preferenceStream?.listen((_) async {

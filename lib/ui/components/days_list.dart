@@ -26,6 +26,14 @@ class _DaysListDisplayState extends State<DaysListDisplay>
 
   late final ReactionDisposer _controllerRxn;
 
+  void _triggerAnimations() {
+    final prev = _store.previousPage.value.toInt();
+    final current = _store.currentPage.value.toInt();
+
+    if (prev != -1) _animationControllers[prev].reverse();
+    if (current != -1) _animationControllers[current].forward();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -41,13 +49,7 @@ class _DaysListDisplayState extends State<DaysListDisplay>
 
     _rxn = reaction(
       (_) => _store.currentPage.value,
-      (_) {
-        final prev = _store.previousPage.value.toInt();
-        final current = _store.currentPage.value.toInt();
-
-        _animationControllers[prev].reverse();
-        _animationControllers[current].forward();
-      },
+      (_) => _triggerAnimations(),
       fireImmediately: true,
     );
 
@@ -63,12 +65,13 @@ class _DaysListDisplayState extends State<DaysListDisplay>
       ));
 
       _store.setCurrentPage(0);
+      setState(() {});
+      _triggerAnimations();
     });
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(seconds: 1), () {
-        final current = _store.currentPage.value.toInt();
-        _animationControllers[current].forward();
+      await Future.delayed(const Duration(seconds: 2), () {
+        _triggerAnimations();
       });
     });
   }
@@ -112,6 +115,7 @@ class _DaysListDisplayState extends State<DaysListDisplay>
                             )
                           : const SizedBox(height: 30),
                       _AnimatedDayWidget(
+                        key: UniqueKey(),
                         controller: _animationControllers[index],
                         day: day,
                         added: added,
@@ -130,6 +134,7 @@ class _DaysListDisplayState extends State<DaysListDisplay>
 
 class _AnimatedDayWidget extends StatefulWidget {
   const _AnimatedDayWidget({
+    super.key,
     required this.controller,
     required this.day,
     required this.added,
